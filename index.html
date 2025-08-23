@@ -69,6 +69,7 @@
             display: flex;
             align-items: center;
             gap: 15px;
+            cursor: pointer;
         }
 
         .logo-icon {
@@ -466,6 +467,35 @@
             border-radius: 8px;
             font-size: 0.9rem;
         }
+
+        .disconnect-button {
+            background: linear-gradient(135deg, #ff2c7d, #ff6b35);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 10px;
+            width: 100%;
+            transition: all 0.3s ease;
+            display: none;
+        }
+
+        .disconnect-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 44, 125, 0.4);
+        }
+
+        .security-notice {
+            background: rgba(0, 204, 255, 0.1);
+            border: 1px solid var(--primary);
+            color: var(--text);
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.85rem;
+        }
     </style>
 </head>
 <body>
@@ -483,7 +513,7 @@
 
     <div class="container">
         <header>
-            <div class="logo">
+            <div class="logo" id="resetApp">
                 <div class="logo-icon"><i class="fas fa-brain"></i></div>
                 <div class="logo-text">NeuroSync AI</div>
             </div>
@@ -500,7 +530,7 @@
                 </div>
                 <div class="chat-messages" id="chatMessages">
                     <div class="message ai-message">
-                        <div>Hello! I'm a chatbot powered by DeepSeek's AI. Please enter your DeepSeek API key in the panel to the right to start chatting.</div>
+                        <div>Hello! I'm a chatbot powered by DeepSeek's AI. Please enter your DeepSeek API key in the panel to the right to start chatting. Your API key is never stored or saved.</div>
                         <div class="message-timestamp" id="initialTimestamp"></div>
                     </div>
                 </div>
@@ -516,7 +546,7 @@
                 <div class="info-title">DeepSeek API Configuration</div>
                 <p>Enter your DeepSeek API key to enable the chatbot functionality.</p>
                 
-                <div class="api-config">
+                <div class="api-config" id="apiConfig">
                     <div class="api-status disconnected">
                         <i class="fas fa-times-circle"></i>
                         <span id="apiStatusText">API Not Connected</span>
@@ -533,10 +563,18 @@
                         <i class="fas fa-plug"></i> Connect to DeepSeek
                     </button>
                     
+                    <button class="disconnect-button" id="disconnectButton">
+                        <i class="fas fa-unplug"></i> Disconnect & Clear API Key
+                    </button>
+                    
+                    <div class="security-notice">
+                        <p><i class="fas fa-shield-alt"></i> <strong>Security Notice:</strong> Your API key is never saved to disk, localStorage, or any persistent storage. It will be cleared when you refresh or close this page.</p>
+                    </div>
+                    
                     <div class="model-info">
                         <p><strong>Model:</strong> deepseek-chat</p>
                         <p><strong>Endpoint:</strong> https://api.deepseek.com</p>
-                        <p>Your API key is stored only in your browser and is never sent to any server except DeepSeek's.</p>
+                        <p>Your API key is only used for the current session and is never stored.</p>
                     </div>
                     
                     <div class="tech-grid">
@@ -548,7 +586,7 @@
                         <div class="tech-card">
                             <div class="tech-icon"><i class="fas fa-shield-alt"></i></div>
                             <div class="tech-name">Secure API</div>
-                            <div class="tech-desc">Your API key is stored locally and used only for authenticating with DeepSeek</div>
+                            <div class="tech-desc">Your API key is never stored and is only kept in memory during your session</div>
                         </div>
                     </div>
                 </div>
@@ -590,7 +628,7 @@
         </div>
 
         <footer>
-            <p>NeuroSync AI • Powered by DeepSeek • Secure API Integration</p>
+            <p>NeuroSync AI • Powered by DeepSeek • No API Key Storage</p>
             <p>Designed for GitHub Pages Deployment • Interview Project</p>
         </footer>
     </div>
@@ -602,11 +640,13 @@
             const sendButton = document.getElementById('sendButton');
             const apiKeyInput = document.getElementById('apiKeyInput');
             const connectButton = document.getElementById('connectButton');
+            const disconnectButton = document.getElementById('disconnectButton');
             const toggleApiKey = document.getElementById('toggleApiKey');
             const apiStatus = document.getElementById('apiStatus');
             const apiStatusText = document.getElementById('apiStatusText');
             const requestsBar = document.getElementById('requestsBar');
             const responseBar = document.getElementById('responseBar');
+            const resetApp = document.getElementById('resetApp');
             
             // Set initial timestamp
             const now = new Date();
@@ -773,11 +813,16 @@
                         messageInput.placeholder = "Type your message here...";
                         sendButton.disabled = false;
                         
+                        // Show disconnect button
+                        disconnectButton.style.display = 'block';
+                        connectButton.style.display = 'none';
+                        
+                        // Clear API key input for security
+                        apiKeyInput.value = '';
+                        apiKeyInput.disabled = true;
+                        
                         // Add connected message
                         addMessage("DeepSeek API connected successfully! How can I assist you today?", false);
-                        
-                        // Save API key to localStorage
-                        localStorage.setItem('deepseekApiKey', apiKey);
                     } else {
                         throw new Error(`API error: ${response.status}`);
                     }
@@ -791,6 +836,34 @@
                 });
             });
             
+            // Disconnect from DeepSeek API
+            disconnectButton.addEventListener('click', function() {
+                // Clear API key
+                apiKey = '';
+                
+                // Reset UI
+                apiStatus.textContent = "API Not Connected";
+                apiStatusText.textContent = "API Not Connected";
+                apiStatusText.parentElement.className = "api-status disconnected";
+                apiStatusText.parentElement.innerHTML = '<i class="fas fa-times-circle"></i> API Not Connected';
+                
+                // Disable chat input
+                messageInput.disabled = true;
+                messageInput.placeholder = "Enter your DeepSeek API key first";
+                sendButton.disabled = true;
+                
+                // Show connect button
+                disconnectButton.style.display = 'none';
+                connectButton.style.display = 'block';
+                
+                // Enable API key input
+                apiKeyInput.disabled = false;
+                apiKeyInput.value = '';
+                
+                // Add disconnected message
+                addMessage("Disconnected from DeepSeek API. Your API key has been cleared from memory.", false);
+            });
+            
             // Toggle API key visibility
             toggleApiKey.addEventListener('click', function() {
                 if (apiKeyInput.type === 'password') {
@@ -799,6 +872,13 @@
                 } else {
                     apiKeyInput.type = 'password';
                     toggleApiKey.innerHTML = '<i class="fas fa-eye"></i>';
+                }
+            });
+            
+            // Reset the entire application
+            resetApp.addEventListener('click', function() {
+                if (confirm("Reset the application? This will clear all conversation history and API key.")) {
+                    window.location.reload();
                 }
             });
             
@@ -814,7 +894,7 @@
                 errorDiv.className = 'error-message';
                 errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
                 
-                apiConfig.appendChild(errorDiv);
+                document.getElementById('apiConfig').appendChild(errorDiv);
                 
                 // Auto-remove after 5 seconds
                 setTimeout(() => {
@@ -851,15 +931,27 @@
                 }
             });
             
-            // Check if API key is stored in localStorage
-            const savedApiKey = localStorage.getItem('deepseekApiKey');
-            if (savedApiKey) {
-                apiKeyInput.value = savedApiKey;
-                apiKey = savedApiKey;
+            // Clear any potentially stored API keys on page load
+            window.addEventListener('load', function() {
+                // Ensure no API keys are stored
+                if (localStorage.getItem('deepseekApiKey')) {
+                    localStorage.removeItem('deepseekApiKey');
+                }
                 
-                // Auto-connect if key is found
-                connectButton.click();
-            }
+                // Clear any session storage as well
+                if (sessionStorage.getItem('deepseekApiKey')) {
+                    sessionStorage.removeItem('deepseekApiKey');
+                }
+            });
+            
+            // Warn user before leaving the page
+            window.addEventListener('beforeunload', function(e) {
+                if (apiKey) {
+                    const message = 'Your API key will be cleared when you leave this page.';
+                    e.returnValue = message;
+                    return message;
+                }
+            });
             
             // Animate metric bars on page load
             document.querySelectorAll('.metric-fill').forEach(bar => {
