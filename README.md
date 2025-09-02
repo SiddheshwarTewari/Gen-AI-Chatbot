@@ -11,7 +11,7 @@
 1. **Connect to API**: Enter your DeepSeek API key and click "Connect to DeepSeek"
 2. **Start Chatting**: Type your message and press Enter or click Send
 3. **Disconnect**: Use the "Disconnect" button to clear your API key from memory
-4. **Reset**: Click the logo to reset the entire application
+4. **Rfresh**: Click refresh button to refresh page and ensure deletion of API key.
 
 ## Security
 
